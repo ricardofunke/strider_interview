@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 import pytz
 
-from common.utils import CamaraSession, create_dirs
+from extract.common.utils import CamaraSession, create_dirs
 
 import pandas as pd
 
@@ -15,16 +15,18 @@ camara_api = CamaraSession()
 TZ = pytz.timezone("America/Sao_Paulo")
 DEST_PATH = "/tmp/camara_files"
 
+CAMARA_URL = "https://dadosabertos.camara.leg.br/api/v2"
+
 
 async def get_lista_proposicoes(data_inicio) -> list:
-    result = await camara_api.get(f"https://dadosabertos.camara.leg.br/api/v2/proposicoes?dataInicio={data_inicio}")
+    result = await camara_api.get(f"{CAMARA_URL}/proposicoes?dataInicio={data_inicio}")
     ids = [i["id"] for i in result["dados"]]
     return ids
 
 
 async def get_proposicao(proposicao_id: int) -> Proposicao:
     log.info(f"Coletando proposicao {proposicao_id}")
-    r = await camara_api.get(f"https://dadosabertos.camara.leg.br/api/v2/proposicoes/{proposicao_id}")
+    r = await camara_api.get(f"{CAMARA_URL}/proposicoes/{proposicao_id}")
     proposicao_json = r["dados"]
     proposicao_df = pd.json_normalize(proposicao_json, sep="_").rename(columns=proposicao_mapping)
     return Proposicao(proposicao_df)
